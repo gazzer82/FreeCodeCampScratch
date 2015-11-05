@@ -1,0 +1,16 @@
+function stringChunk(str, n) {
+  var arrIndex = 0;
+  var pIndex = 0;
+  return str.asArray.reduce(function(retArray,current,index,array){
+    if(pIndex === 3){
+      arrIndex ++;
+      retArray.push('');
+    }
+    if(pIndex <= n){
+      retArray[pIndex] = retArray[pIndex] + current;
+    }
+    return retArray;
+    },[]);
+}
+
+console.log(stringChunk('codewars', 2));
