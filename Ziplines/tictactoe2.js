@@ -1,6 +1,6 @@
-var computerMoves = [];
-var userMoves = [];
-var currentMove = 0;
+var computerMoves = ['21','01'];
+var userMoves = ['00'];
+var currentMove = true;
 var validRows = [
             ['00','10','20'],
             ['01','11','21'],
@@ -11,10 +11,20 @@ var validRows = [
             ['00','11','22'],
             ['20','11','02']
         ];
+var validSquaresFactory = ['00','10','20','01','11','21','02','12','22'];
+var validSquares = validSquaresFactory;
 
-function evaluateMove(move,attacker,defender){
-    //build the array with the potenital move added to the attacker, and loop through it to see where we are at.
-    attacker.push(move);
+function evaluateMove(move,attacker,defender,attack){
+    //Create some new variables so we don't mess with the global ones
+    var tempAttack = attacker.slice(0);
+    var tempDefend = defender.slice(0);
+    //Now add our new move to the correct place
+    if(attack){
+        tempAttack.push(move);
+    } else {
+        tempDefend.push(move);
+    }
+    //Now let's calculate the values for all valid rows.
     return validRows.reduce(function(store,array){
         //Push this rows score to the store array
         store.push(array.reduce(function(score,square,index){
@@ -23,10 +33,10 @@ function evaluateMove(move,attacker,defender){
                 //Square 1, so only two values need setting (0 is already the default)
                 case 0:
                     //console.log('checking for ' + square + ' in ' + moves1);
-                    if(attacker.indexOf(square) !== -1){
+                    if(tempAttack.indexOf(square) !== -1){
                         //Ok it's attackers square, so +1
                         score = 1;
-                    } else if(defender.indexOf(square) !== -1){
+                    } else if(tempDefend.indexOf(square) !== -1){
                         //Defenders square, -1
                         score = -1;
                     }
@@ -34,7 +44,7 @@ function evaluateMove(move,attacker,defender){
                     break;
                 case 1:
                     //Square 2, so let's look at who's square it is
-                    if(attacker.indexOf(square) !== -1){
+                    if(tempAttack.indexOf(square) !== -1){
                         //Attachers square, evaluate previous square to work out value
                         if(score === 1){
                             //second attackers square so 10
@@ -46,7 +56,7 @@ function evaluateMove(move,attacker,defender){
                             //Previous empty, so still valid row
                             score = 1;
                         }
-                    } else if (defender.indexOf(square) !== -1){
+                    } else if (tempDefend.indexOf(square) !== -1){
                         //Defender square, evaluate previous square to work out value
                         if(score === 1){
                             //Blocking move so 0
@@ -63,7 +73,7 @@ function evaluateMove(move,attacker,defender){
                     break;
                 case 2:
                     //Square 3, so let's look at who's square it is
-                    if(attacker.indexOf(square) !== -1){
+                    if(tempAttack.indexOf(square) !== -1){
                         //Attachers square, evaluate previous square to work out value
                         if(score === 1){
                             //Empty first square, attacker second square, 2 in a row
@@ -81,7 +91,7 @@ function evaluateMove(move,attacker,defender){
                             //First two squares empty so one to the attacker
                             score = 1;
                         }
-                    } else if (defender.indexOf(square) !== -1){
+                    } else if (tempDefend.indexOf(square) !== -1){
                         //Defender square, evaluate previous square to work out value
                         if(score === 1){
                             //Empty first square, attacker second square, so blocked row
@@ -100,15 +110,45 @@ function evaluateMove(move,attacker,defender){
                             score = -1;
                         }
                     }
-                    //console.log(score);
+                    //console.log('Score: ' + score);
                     break;
                 }
             return score;
         },0));
         return store;
     },[]).reduce(function(store,value,index,array){
-        return (value > store) ? value : store;
+        //Now let's distill this down to the lowest or biggest number depedning on out mode and send it back
+        switch(attack){
+            case(true):
+                return (value > store) ? value : store;
+            case(false):
+                return (value < store) ? value : store;
+        }
     });
 }
 
-console.log(evaluateMove('',['00','10','20'],['']));
+function generateMove(attack,attackerArray,defenderArray){
+    var takenMoves = computerMoves.concat(userMoves);
+    validSquares = validSquaresFactory.filter(function(object){
+        return takenMoves.indexOf(object) === -1;
+    });
+    console.log(validSquares);
+    var squareScores = validSquares.reduce(function(store,square,index,array){
+        store.push([square,evaluateMove(square,computerMoves,userMoves,currentMove)]);
+        return store;
+    },[]);
+    console.log(squareScores);
+}
+
+function evaluateRound(attack,attackerArray,defenderArray,remainingValid){
+    if(remainingValid.length > 1){
+        //remainingValid.reduce()
+        return evaluateMove(remainingValid[0],attackerArray,defenderArray,!attack);
+    }else{
+        return evaluateMove(remainingValid[0],attackerArray,defenderArray,!attack);
+    }
+
+}
+
+//console.log(evaluateMove('10',['21','01'],['00'],true));
+console.log(generateMove());
